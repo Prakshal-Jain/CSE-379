@@ -6,6 +6,7 @@
 	.global current_position
 	.global game_over
 
+
 prompt:	.string 0xC," -------------------- ",13,10
 		    .string "|                    |",13,10
 		    .string "|                    |",13,10
@@ -38,6 +39,7 @@ game_over: 			.byte 0x00
 
 	.text
 
+
 	.global uart_interrupt_init
 	.global gpio_interrupt_init
 	.global UART0_Handler
@@ -50,11 +52,14 @@ game_over: 			.byte 0x00
 	.global uart_init		; This is from your Lab #4 Library
 	.global lab6
 
+
 ptr_to_prompt:					.word prompt
 ptr_to_hv_movement:	    		.word hv_movement
 ptr_to_direction_movement: 		.word direction_movement
 ptr_to_current_position: 	    .word current_postion
 ptr_to_game_over: 				.word game_over
+
+
 lab6:					; This is your main routine which is called from your C wrapper
 
 	PUSH {lr}   		; Store lr to stack
@@ -67,16 +72,18 @@ lab6:					; This is your main routine which is called from your C wrapper
 	; This is where you should implement a loop, waiting for the user to
 	; enter a q, indicating they want to end the program.
 
-	ldr r4, ptr_to_current_position
-	ldr r5, ptr_to_prompt
-	ADD r5, r5, #251
-	STR r5, [r4]
+	ldr r4, ptr_to_current_position ; Load the pointer ptr_to_current_position into  r4
+	ldr r5, ptr_to_prompt ; Load the pointer ptr_to_prompt into  r5
+	ADD r5, r5, #251      ; Add 251 to the starting
+	STR r5, [r4]          ; Store the starting position of 'X' into memory
+
 VALID_POSITION:
-	ldr r4, ptr_to_game_over
-	LDRB r4, [r4]
-	CMP r4, #1
-	BEQ GAMEOVER
-	B VALID_POSITION
+
+	ldr r4, ptr_to_game_over ; Load pointer to flag game_over
+	LDRB r4, [r4]            ; Load a byte of data from memory (game_over flag) into r4
+	CMP r4, #1               ; Compare the value in r4 with 1
+	BEQ GAMEOVER             ; If r4 == 1 the jump to label GAMEOVER
+	B VALID_POSITION         ; Else Jump to VALID_POSITION
 GAMEOVER:
 	POP {lr}		; Restore lr from the stack
 	MOV pc, lr
@@ -159,38 +166,39 @@ UART0_Handler:
 	; them to & from the stack at the beginning & end of the handler
 
 	; Clear Interrupt (UART Interrupt Clear Register (UARTICR))
-	PUSH {r4-r11, lr}		; Store r4-r11, lr to stack
+	PUSH {r4-r11, lr}		 ; Store r4-r11, lr to stack
 
-	MOV r0, #0xC000			; Move the base address for UART0 in r0
+	MOV r0, #0xC000			 ; Move the base address for UART0 in r0
 	MOVT r0, #0x4000
 
-	MOV r1, #0x10			; Mask with bit-4 set to 1
-	LDRB r2, [r0, #0x044]	; Load the original byte
+	MOV r1, #0x10			 ; Mask with bit-4 set to 1
+	LDRB r2, [r0, #0x044]	 ; Load the original byte
 
-	ORR r2, r2, r1			; Set the bit-4 to 1, keeping other bits the same
-	STRB r2, [r0, #0x044]	; Store the byte back
+	ORR r2, r2, r1			 ; Set the bit-4 to 1, keeping other bits the same
+	STRB r2, [r0, #0x044]	 ; Store the byte back
 
-	; Handle Interrupt
-	BL simple_read_character	; Branch to the simple_read_character function
-	CMP r0, #13
-	BNE ENTERNOTPRESSED
-	ldr r4, ptr_to_hv_movement
-	LDRB r0, [r4]
-	EOR r0, r0, #0x1
-	AND r0, r0, #0x1
-	STRB r0, [r4]
+	                         ; Handle Interrupt
+	BL simple_read_character ; Branch to the simple_read_character function
+	CMP r0, #13              ; Compare the read value from user input (r0) with 13 (acsii of Enter key)
+	BNE ENTERNOTPRESSED      ; If r0 != 13 the branch to ENTERNOTPRESSED
+
+	ldr r4, ptr_to_hv_movement ; Else get the pointer address of flag hv_movement
+	LDRB r0, [r4]              ; Get the flag hv_movement into r0
+	EOR r0, r0, #0x1           ; Flip the flag in r0 using EOR
+	STRB r0, [r4]              ; Store the flipped flag into memory
+
 ENTERNOTPRESSED:
+
 	POP {r4-r11, lr}		; Restore r4-r11, lr from the stack
-	BX lr       	; Return
+	BX lr       	        ; Return
 
 
 Switch_Handler:
+							; Your code for your UART handler goes here.
+							; Remember to preserver registers r4-r11 by pushing then popping
+							; them to & from the stack at the beginning & end of the handler
 
-	; Your code for your UART handler goes here.
-	; Remember to preserver registers r4-r11 by pushing then popping
-	; them to & from the stack at the beginning & end of the handler
-
-	; Clear the Interrupt for the Pin on the Port via the GPIO Interrupt Clear Register (GPIOICR)
+							; Clear the Interrupt for the Pin on the Port via the GPIO Interrupt Clear Register (GPIOICR)
 	PUSH {r4-r11, lr}		; Store r4-r11, lr to stack
 
 	MOV r0, #0x5000			; Move the base address for GPIO Port F in r0
@@ -202,14 +210,13 @@ Switch_Handler:
 	ORR r2, r2, r1			; Set the bit-4 to 1, keeping other bits the same
 	STRB r2, [r0, #0x41C]	; Store the byte back
 
-	ldr r4, ptr_to_direction_movement
-	LDRB r0, [r4]
-	EOR r0, r0, #0x1
-	AND r0, r0, #0x1
-	STRB r0, [r4]
+	ldr r4, ptr_to_direction_movement ; Get the address where flag for direction (up/down, left/right) is kept
+	LDRB r0, [r4]                     ; Get flag for direction_movement into r0
+	EOR r0, r0, #0x1                  ; Flip the bit (i.e switch direction)
+	STRB r0, [r4]                     ; Store the flipped direction
 
-	POP {r4-r11, lr}						; Restore r4-r11, lr from the stack
-	BX lr       	; Return
+	POP {r4-r11, lr}       ; Restore r4-r11, lr from the stack
+	BX lr       	       ; Return
 
 
 timer_interrupt_init:
@@ -236,7 +243,7 @@ timer_interrupt_init:
 
 							; Put Timer in Periodic Mode
 	LDRB r1, [r0, #0x004]	; Load the existing byte
-	ORR r1, #0x2			; Write ‘2’ to TAMR
+	ORR r1, #0x2			; Write â€˜2â€™ to TAMR
 	STRB r1, [r0, #0x004]	; Store the changed byte
 
 							; Setup Interval Period
@@ -278,62 +285,66 @@ Timer_Handler:
 	; Lab #6.  Instead, you can use the same startup code as for Lab #5.
 	; Remember to preserver registers r4-r11 by pushing then popping
 	; them to & from the stack at the beginning & end of the handler.
+
 	PUSH {r4-r11, lr}
+    ; -------------- Clear interrupt --------------------
+	MOV r0, #0x0000       ; Mov 0x0000 in the lower half byte of r0
+	MOVT r0, #0x4003      ; Mov 0x4003 in the upper half of r0
+	LDRB r1, [r0, #0x024] ; Load a byte of data from address 0x40030024
+	ORR r1, #0x1          ; Set the lowest bit of the loaded data
+	STRB r1, [r0, #0x024] ; Store the byte of data at address 0x40030024
 
-	MOV r0, #0x0000
-	MOVT r0, #0x4003
-	LDRB r1, [r0, #0x024]
-	ORR r1, #0x1
-	STRB r1, [r0, #0x024]
-
-	ldr r1, ptr_to_hv_movement
+	; -------------- horizontal/ Verical movement pointer -------
+	ldr r1, ptr_to_hv_movement ; Load the address of ptr_to_hv_movement into r1
 	LDRB r1, [r1]
+	; -------------- up/down, left/right movement pointer -------
 	ldr r2, ptr_to_direction_movement
 	LDRB r2, [r2]
+	; -------------- current position pointer of X -------
 	ldr r4, ptr_to_current_position
 	MOV r3, r4
 	LDR r3, [r3]
-	MOV r0, #32
-	STRB r0, [r3]
+	MOV r0, #32 ; Set 32 (ascii of " ") into r0
+	STRB r0, [r3] ; Set " " at the current position of "X" to remove it
 
-	CMP r1, #0
-	BNE NOTHORIZONTAL
-	CMP r2, #0
-	BNE NOTLEFT
-	SUB r3, r3, #1
-	B MOVEMENTDIRECTIONFOUND
+	CMP r1, #0 		  	; Compare value of r1 with #0
+	BNE NOTHORIZONTAL 	; If r1 != 0 jump to label NOTHORIZONTAL (movement is on Vertical axis)
+	CMP r2, #0        	; Else (movement is on Vertical axis) Compare value of r2 with #0
+	BNE NOTLEFT       	; If r2 != 0 jump to label NOTLEFT (movement is in the right direction)
+	SUB r3, r3, #1    	; Else (movement is the left direction) Subtract the current position of "X" by 1 (move one position left)
+	B MOVEMENTDIRECTIONFOUND ; (Movement Complete) Jump to label to MOVEMENTDIRECTIONFOUND
 NOTLEFT:
-	ADD r3, r3, #1 ; direction is horizontal and right
-	B MOVEMENTDIRECTIONFOUND
+	ADD r3, r3, #1 ; (direction is horizontal and right) Add the current position of "X" by 1 (move one position right)
+	B MOVEMENTDIRECTIONFOUND ; (Movement Complete) Jump to label to MOVEMENTDIRECTIONFOUND
 NOTHORIZONTAL:
-	CMP r2, #0
-	BNE NOTUP
-	SUB r3, r3, #24 ; direction is vertical and up
-	B MOVEMENTDIRECTIONFOUND
+	CMP r2, #0 ;(movement is on Horizontal axis) Compare value of r2 with #0
+	BNE NOTUP  ; If r2 != 0 jump to label NOTUP (movement is in the down direction)
+	SUB r3, r3, #24 ; Else (direction is vertical and up) Subtract the current position of "X" by 24 (move one position up)
+	B MOVEMENTDIRECTIONFOUND ; (Movement Complete) Jump to label to MOVEMENTDIRECTIONFOUND
 NOTUP:
-	ADD r3, r3, #24 ; direction is vertical and down
+	ADD r3, r3, #24 ; (direction is vertical and down)  Add the current position of "X" by 24 (move one position up)
 MOVEMENTDIRECTIONFOUND:
 
-	MOV r7, #1
-	ldr r6, ptr_to_game_over
-	LDRB r5, [r3]
+	MOV r7, #1 ; MOV 1 into register r7 (possible flag for game_over)
+	ldr r6, ptr_to_game_over ; Load the address pointed to ptr_to_game_over  into r6
+	LDRB r5, [r3] ; Load the value from (new position of 'X') into r5
 
-	CMP r5, #45
-	BNE GAME_OVER_NOTFOUND_1
-	STRB r7, [r6]
+	CMP r5, #45 ; Compare value in r5 (current character in new position of 'X') with Ascii of '-'
+	BNE GAME_OVER_NOTFOUND_1 ; If r5 != 45 jump to label GAME_OVER_NOTFOUND_1
+	STRB r7, [r6] ; Else: Store 1 in memory with address in r6 (game_over flag)
 GAME_OVER_NOTFOUND_1:
 
-	CMP r5, #124
-	BNE GAME_OVER_NOTFOUND_2
-	STRB r7, [r6]
-GAME_OVER_NOTFOUND_2
+	CMP r5, #124 ; Compare value in r5 (current character in new position of 'X') with Ascii of '|'
+	BNE GAME_OVER_NOTFOUND_2 ; If r5 != 124 jump to label GAME_OVER_NOTFOUND_2
+	STRB r7, [r6] ; Else: Store 1 in memory with address in r6 (game_over flag)
+GAME_OVER_NOTFOUND_2:
 
-	STR r3, [r4]
-	MOV r0, #88
-	STRB r0, [r3]
+	STR r3, [r4] ; Store the new position of 'X' into memory (ptr_to_current_position)
+	MOV r0, #88 ; Move 88 into r0 ascii of 'X'
+	STRB r0, [r3] ; Place the 'X' in its new position
 
-	ldr r0, ptr_to_prompt
-	BL output_string
+	ldr r0, ptr_to_prompt ; Get the address of the table prompt into r0
+	BL output_string ; Display the prompt
 
 	POP {r4-r11, lr}						; Restore r4-r11, lr from the stack
 	BX lr       	; Return
