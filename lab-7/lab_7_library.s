@@ -24,6 +24,8 @@ prompt:	.string 0xC,"+------+------+------+------+",13,10
 		    .string "|      |      |      |      |",13,10
 		    .string "+------+------+------+------+",13,10
 
+hb_array:	.half 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+
 hv_movement:	    .byte 0x00		; Horizontal -> 0 Vertical -> 1
 direction_movement: .byte 0x00		; Left -> 0 Right -> 1 ; Up -> 0 Down -> 1
 current_postion: 	.word 0x00000000		; Store number of time SW1 is pressed
@@ -44,15 +46,32 @@ game_over: 			.byte 0x00
 	.global output_string		; This is from your Lab #4 Library
 	.global uart_init		; This is from your Lab #4 Library
 
-	; New
+	; New added
 
 	.global string2int
 	.global int2string
-	.global read_from_push_btn
+	.global read_from_push_btn ; modify to just initialize
 	.global illuminate_LEDs
 	.global illuminate_RGB_LED
 
 	;end
+
+	;New need to be writted
+
+	;.global push_btn_inturrpt_init
+	;.global push_btn_inturrpt_handler
+
+	;.global sw2_inturrpt_init
+	;.global sw2_inturrpt_handler
+
+	;.global generateRandomNumber
+	;.global generateRandom2_4
+	;.global incrementClock
+	;.global select_RBG_color
+
+
+	; end
+
 	.global ptr_to_prompt
 	.global ptr_to_hv_movement
 	.global ptr_to_direction_movement
@@ -64,7 +83,7 @@ ptr_to_hv_movement:	    		.word hv_movement
 ptr_to_direction_movement: 		.word direction_movement
 ptr_to_current_position: 	    .word current_postion
 ptr_to_game_over: 				.word game_over
-
+ptr_to_hb_array:				.word hb_array
 
 uart_interrupt_init:
 	PUSH {lr}   		; Store lr to stack
