@@ -5,6 +5,7 @@
 	.global direction_movement
 	.global current_postion
 	.global game_over
+	.global hb_array
 
 prompt:	.string 0xC,"+------+------+------+------+",13,10
 		    .string "|      |      |      |      |",13,10
@@ -30,7 +31,8 @@ hv_movement:	    .byte 0x00		; Horizontal -> 0 Vertical -> 1
 direction_movement: .byte 0x00		; Left -> 0 Right -> 1 ; Up -> 0 Down -> 1
 current_postion: 	.word 0x00000000		; Store number of time SW1 is pressed
 game_over: 			.byte 0x00
-
+count_2:			.byte 0x00
+count_4:			.byte 0x00
 
 	.text
 
@@ -65,7 +67,7 @@ game_over: 			.byte 0x00
 	;.global sw2_inturrpt_handler
 
 	;.global generateRandomNumber
-	;.global generateRandom2_4
+	.global generateRandom2_4
 	;.global incrementClock
 	;.global select_RBG_color
 
@@ -84,6 +86,15 @@ ptr_to_direction_movement: 		.word direction_movement
 ptr_to_current_position: 	    .word current_postion
 ptr_to_game_over: 				.word game_over
 ptr_to_hb_array:				.word hb_array
+
+generateRandom2_4:
+	PUSH {r1-r11, lr}
+
+	; 10% -> 4
+	; 90% -> 2
+
+	POP {r1-r11, lr}
+	MOV pc, lr
 
 uart_interrupt_init:
 	PUSH {lr}   		; Store lr to stack
@@ -108,7 +119,7 @@ uart_interrupt_init:
 	ORR r2, r2, r1			; Set the bit-5 to 1, keeping other bits the same
 	STRB r2, [r0, #0x100]	; Store the byte back
 
-	POP {lr}		; Restore lr from the stack
+	POP {r4-r11, lr}		; Restore lr from the stack
 	MOV pc, lr
 
 

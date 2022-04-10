@@ -38,12 +38,13 @@
 
 	; end
 
+	.global hb_array
+	.global prompt
+	.global hv_movement
+	.global direction_movement
+	.global current_postion
+	.global game_over
 
-	.global ptr_to_prompt
-	.global ptr_to_hv_movement
-	.global ptr_to_direction_movement
-	.global ptr_to_current_position
-	.global ptr_to_game_over
 
 ptr_to_prompt:					.word prompt
 ptr_to_hv_movement:	    		.word hv_movement
@@ -54,8 +55,9 @@ ptr_to_hb_array:				.word hb_array
 
 
 lab7:
-	uart_interrupt_init
+	BL uart_interrupt_init
 
+	.end
 
 
 
