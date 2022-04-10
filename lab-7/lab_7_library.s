@@ -76,6 +76,15 @@ game_status: 		.byte 0x0 ; 0 -> game going on, 1-> game paused, 2-> game ended w
 	.global incrementClock
 	.global select_RBG_color
 
+	;.global renderDisplayBoard
+	;.global execute_down_action
+	;.global execute_up_action
+	;.global execute_left_action
+	;.global execute_right_action
+	;.global set_game_status
+	;.global reset_game
+	;.global update_score
+
 
 	; end
 
