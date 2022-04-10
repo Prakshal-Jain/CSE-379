@@ -7,6 +7,8 @@
 	.global game_over
 	.global hb_array
 	.global random_count
+	.global goal
+	.global game_status
 
 prompt:	.string 0xC,"+------+------+------+------+",13,10
 		    .string "|      |      |      |      |",13,10
@@ -32,7 +34,10 @@ hv_movement:	    .byte 0x00		; Horizontal -> 0 Vertical -> 1
 direction_movement: .byte 0x00		; Left -> 0 Right -> 1 ; Up -> 0 Down -> 1
 current_position: 	.word 0x00000000		; Store number of time SW1 is pressed
 game_over: 			.byte 0x00
-random_count:		.word 0x00
+random_count:		.word 0x00 ; continiously incremented count
+goal:				.half 0x0800 ; goal of the current game defaults to 2048
+game_status: 		.byte 0x0 ; 0 -> game going on, 1-> game paused, 2-> game ended won, 3-> game ended won
+
 
 	.text
 
@@ -68,8 +73,8 @@ random_count:		.word 0x00
 
 	;.global generateRandomNumber
 	.global generateRandom2_4
-	;.global incrementClock
-	;.global select_RBG_color
+	.global incrementClock
+	.global select_RBG_color
 
 
 	; end
@@ -80,13 +85,78 @@ random_count:		.word 0x00
 	.global ptr_to_current_position
 	.global ptr_to_game_over
 	.global ptr_to_random_count
+	.global ptr_to_goal
+	.global ptr_to_game_status
+
 ptr_to_prompt:					.word prompt
 ptr_to_hv_movement:	    		.word hv_movement
 ptr_to_direction_movement: 		.word direction_movement
 ptr_to_current_position: 	    .word current_position
 ptr_to_game_over: 				.word game_over
 ptr_to_hb_array:				.word hb_array
-ptr_to_random_count				.word random_count
+ptr_to_random_count:			.word random_count
+ptr_to_goal:					.word goal
+ptr_to_game_status: 			.word game_status
+
+
+incrementClock:
+	PUSH {r0-r11, lr}
+	ldr r0, ptr_to_random_count
+	LDR r1, [r0]
+	ADD r1, #1
+	STR r1, [r0]
+	POP {r0-r11, lr}
+	MOV pc, lr
+
+; Red->2, Blue->4, Green->8, purple->6, yellow->10, and white->15
+select_RBG_color:
+	PUSH {r0-r11, lr}
+
+	ldr r0, ptr_to_goal
+	LDRH r0, [r0]
+
+	CMP r0, #2048
+	BNE GOAL_NOT_2048
+	MOV r1, #10
+	B COLOR_SELECTED
+GOAL_NOT_2048:
+	CMP r0, #1024
+	BNE GOAL_NOT_1024
+	MOV r1, #6
+	B COLOR_SELECTED
+GOAL_NOT_1024:
+	CMP r0, #512
+	BNE GOAL_NOT_512
+	MOV r1, #15
+	B COLOR_SELECTED
+GOAL_NOT_512:
+	CMP r0, #256
+	BNE COLOR_SELECTED
+	MOV r1, #12
+COLOR_SELECTED:
+
+	ldr r0, ptr_to_game_status
+	LDRB r0, [r0]
+	CMP r0, #1
+	BNE NOTPAUSED
+	MOV r1, #0
+	B COLOR_SELECTED_BY_STATUS
+NOTPAUSED:
+	CMP r0, #2
+	BNE GAME_OVER_WON
+	MOV r1, #8
+	B COLOR_SELECTED_BY_STATUS
+GAME_OVER_WON:
+	CMP r0, #3
+	BNE COLOR_SELECTED_BY_STATUS
+	MOV r1, #2
+COLOR_SELECTED_BY_STATUS:
+
+	MOV r0, r1
+	BL illuminate_RGB_LED
+
+	POP {r0-r11, lr}
+	MOV pc, lr
 
 generateRandom2_4:
 	PUSH {r1-r11, lr}
