@@ -3,7 +3,7 @@
 	.global prompt
 	.global hv_movement
 	.global direction_movement
-	.global current_postion
+	.global current_position
 	.global game_over
 	.global hb_array
 
@@ -29,10 +29,9 @@ hb_array:	.half 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 
 hv_movement:	    .byte 0x00		; Horizontal -> 0 Vertical -> 1
 direction_movement: .byte 0x00		; Left -> 0 Right -> 1 ; Up -> 0 Down -> 1
-current_postion: 	.word 0x00000000		; Store number of time SW1 is pressed
+current_position: 	.word 0x00000000		; Store number of time SW1 is pressed
 game_over: 			.byte 0x00
-count_2:			.byte 0x00
-count_4:			.byte 0x00
+random_count:		.word 0x00
 
 	.text
 
@@ -83,7 +82,7 @@ count_4:			.byte 0x00
 ptr_to_prompt:					.word prompt
 ptr_to_hv_movement:	    		.word hv_movement
 ptr_to_direction_movement: 		.word direction_movement
-ptr_to_current_position: 	    .word current_postion
+ptr_to_current_position: 	    .word current_position
 ptr_to_game_over: 				.word game_over
 ptr_to_hb_array:				.word hb_array
 
@@ -93,6 +92,21 @@ generateRandom2_4:
 	; 10% -> 4
 	; 90% -> 2
 
+	ldr r1, random_count
+	LDR r1, [r1]
+START_MODING:
+	CMP r1, #9
+	BLE DONE_MODING
+	SUB r1, r1, #9
+	B START_MODING
+DONE_MODING:
+	CMP r1, #0
+	BNE SELECTED_NUMBER
+	MOV r0, 4
+	B NUMBER_SELECTED
+SELECTING_NUMBER_2:
+	MOV r0, 2
+NUMBER_SELECTED:
 	POP {r1-r11, lr}
 	MOV pc, lr
 

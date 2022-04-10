@@ -42,14 +42,14 @@
 	.global prompt
 	.global hv_movement
 	.global direction_movement
-	.global current_postion
+	.global current_position
 	.global game_over
 
 
 ptr_to_prompt:					.word prompt
 ptr_to_hv_movement:	    		.word hv_movement
 ptr_to_direction_movement: 		.word direction_movement
-ptr_to_current_position: 	    .word current_postion
+ptr_to_current_position: 	    .word current_position
 ptr_to_game_over: 				.word game_over
 ptr_to_hb_array:				.word hb_array
 
