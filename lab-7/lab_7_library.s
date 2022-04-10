@@ -6,6 +6,7 @@
 	.global current_position
 	.global game_over
 	.global hb_array
+	.global random_count
 
 prompt:	.string 0xC,"+------+------+------+------+",13,10
 		    .string "|      |      |      |      |",13,10
@@ -78,13 +79,14 @@ random_count:		.word 0x00
 	.global ptr_to_direction_movement
 	.global ptr_to_current_position
 	.global ptr_to_game_over
-
+	.global ptr_to_random_count
 ptr_to_prompt:					.word prompt
 ptr_to_hv_movement:	    		.word hv_movement
 ptr_to_direction_movement: 		.word direction_movement
 ptr_to_current_position: 	    .word current_position
 ptr_to_game_over: 				.word game_over
 ptr_to_hb_array:				.word hb_array
+ptr_to_random_count				.word random_count
 
 generateRandom2_4:
 	PUSH {r1-r11, lr}
@@ -92,7 +94,7 @@ generateRandom2_4:
 	; 10% -> 4
 	; 90% -> 2
 
-	ldr r1, random_count
+	ldr r1, ptr_to_random_count
 	LDR r1, [r1]
 START_MODING:
 	CMP r1, #9
@@ -101,11 +103,11 @@ START_MODING:
 	B START_MODING
 DONE_MODING:
 	CMP r1, #0
-	BNE SELECTED_NUMBER
-	MOV r0, 4
+	BNE SELECTING_NUMBER_2
+	MOV r0, #4
 	B NUMBER_SELECTED
 SELECTING_NUMBER_2:
-	MOV r0, 2
+	MOV r0, #2
 NUMBER_SELECTED:
 	POP {r1-r11, lr}
 	MOV pc, lr
