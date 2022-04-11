@@ -60,13 +60,7 @@ random_count:		.word 0x00
 
 	;New need to be writted
 
-	;.global push_btn_inturrpt_init
-	;.global push_btn_inturrpt_handler
-
-	;.global sw2_inturrpt_init
-	;.global sw2_inturrpt_handler
-
-	;.global generateRandomNumber
+	.global generateRandomNumber
 	.global generateRandom2_4
 	;.global incrementClock
 	;.global select_RBG_color
@@ -88,17 +82,33 @@ ptr_to_game_over: 				.word game_over
 ptr_to_hb_array:				.word hb_array
 ptr_to_random_count				.word random_count
 
+
+generateRandomNumber:
+	PUSH {r1-r11, lr}			; Store r4-r11, lr to stack
+
+	ldr r1, ptr_to_random_count	; Pointer to random_count
+	LDR r1, [r1]				; Load the current count (which will be random wrt the generateRandomNumber is called)
+	; Take r1 % 15
+	MOV r0, #15					; r0 = 15				
+	UDIV r2, r1, r0				; r2 = r1 / 15
+	MUL r2, r2, r0				; r2 = r2 * 15
+	SUB r0, r1, r2				; r0 = r1 - r2
+
+	POP {r1-r11, lr}			; Restore r4-r11, lr from the stack
+	MOV pc, lr
+
+
 generateRandom2_4:
-	PUSH {r1-r11, lr}
+	PUSH {r1-r11, lr}			; Store r4-r11, lr to stack
 
 	; 10% -> 4
 	; 90% -> 2
 
-	ldr r1, ptr_to_random_count
-	LDR r1, [r1]
+	ldr r1, ptr_to_random_count	; Pointer to random_count 
+	LDR r1, [r1]				; Load the current count (which will be random wrt the generateRandomNumber is called)
 START_MODING:
-	CMP r1, #9
-	BLE DONE_MODING
+	CMP r1, #9					; r1 = 9
+	BLE DONE_MODING				; 
 	SUB r1, r1, #9
 	B START_MODING
 DONE_MODING:
@@ -266,7 +276,7 @@ timer_interrupt_init:
 
 							; Put Timer in Periodic Mode
 	LDRB r1, [r0, #0x004]	; Load the existing byte
-	ORR r1, #0x2			; Write ‘2’ to TAMR
+	ORR r1, #0x2			; Write ï¿½2ï¿½ to TAMR
 	STRB r1, [r0, #0x004]	; Store the changed byte
 
 							; Setup Interval Period
