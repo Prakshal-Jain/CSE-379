@@ -202,6 +202,49 @@ NUMBER_SELECTED:
 	MOV pc, lr
 
 
+execute_down_action:
+	PUSH {r4-r11, lr}		; Store r4-r11, lr to stack
+
+	ldr r0, ptr_to_hb_array	; Load the base address to hb_array
+
+	; Column -> r1,		Row -> r2
+	MOV r1, #16				; start at block index 8
+
+MOVE_NEXT_COLUMN:
+	MOV r2, r1
+
+MOVE_PREVIOUS_ROW:
+	LDRH r3, [r0, r2]
+	LDRH r4, [r0, r2, ADD #8]
+	CMP r3, r4
+	BNE SHIFT_NEXT_ROW
+
+	ADD r4, r4, r3
+	MOV r3, #0
+	STRH r4, [r0, r2, ADD #8]
+	STRH r3, [r0, r2]
+	B STOP_PREV_ROW
+
+SHIFT_NEXT_ROW:
+	CMP r4, #0
+	BGT STOP_PREV_ROW
+	STRH r3, [r0, r2, ADD #8]
+	MOV r4, #0
+	STRH r4, [r0, r2]
+
+STOP_PREV_ROW:
+	SUB r2, r2, #8
+	CMP r2, #0
+	BGE MOVE_PREVIOUS_ROW
+
+DONT_MERGE:
+	ADD r1, r1, #2;
+	CMP r1, #22
+	BLE MOVE_NEXT_COLUMN
+
+	POP {r4-r11, lr}		; Restore r4-r11, lr from the stack
+	MOV pc, lr
+
 uart_interrupt_init:
 	PUSH {lr}   		; Store lr to stack
 
