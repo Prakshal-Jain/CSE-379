@@ -136,8 +136,8 @@ GOAL_NOT_512:
 	CMP r0, #256
 	BNE COLOR_SELECTED
 	MOV r1, #12
-COLOR_SELECTED:
 
+COLOR_SELECTED:
 	ldr r0, ptr_to_game_status
 	LDRB r0, [r0]
 	CMP r0, #1
