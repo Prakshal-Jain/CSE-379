@@ -168,7 +168,7 @@ generateRandomNumber:
 	ldr r1, ptr_to_random_count	; Pointer to random_count
 	LDR r1, [r1]				; Load the current count (which will be random wrt the generateRandomNumber is called)
 	; Take r1 % 15
-	MOV r0, #15					; r0 = 15				
+	MOV r0, #16					; r0 = 15				
 	UDIV r2, r1, r0				; r2 = r1 / 15
 	MUL r2, r2, r0				; r2 = r2 * 15
 	SUB r0, r1, r2				; r0 = r1 - r2
@@ -200,6 +200,7 @@ SELECTING_NUMBER_2:
 NUMBER_SELECTED:
 	POP {r1-r11, lr}
 	MOV pc, lr
+
 
 uart_interrupt_init:
 	PUSH {lr}   		; Store lr to stack
